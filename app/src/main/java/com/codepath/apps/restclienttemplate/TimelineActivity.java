@@ -2,6 +2,7 @@ package com.codepath.apps.restclienttemplate;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -47,15 +48,16 @@ public class TimelineActivity extends AppCompatActivity {
     TweetAdapter tweetAdapter;
     ArrayList<Tweet> tweets;
     RecyclerView rvTweets;
+    private SwipeRefreshLayout swipeContainer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // only call setContentView once at the top
         setContentView(R.layout.activity_timeline);
 
         // initialize twitter client
         client = TwitterApp.getRestClient(this);
-
         // find RecyclerView
         rvTweets = (RecyclerView) findViewById(R.id.rvTweet);
         // initialize ArrayList (data source)
@@ -67,6 +69,21 @@ public class TimelineActivity extends AppCompatActivity {
         // set adapter
         rvTweets.setAdapter(tweetAdapter);
         populateTimeline();
+
+        // look up swipe container view
+        swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
+        // set up refresh listener that triggers new data loading
+        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                populateTimeline();
+            }
+        });
+        // configure refreshing colors
+        swipeContainer.setColorSchemeColors(getResources().getColor(android.R.color.holo_blue_bright),
+                getResources().getColor(android.R.color.holo_green_light),
+                getResources().getColor(android.R.color.holo_orange_light),
+                getResources().getColor(android.R.color.holo_red_light));
     }
 
     private void populateTimeline() {
@@ -74,10 +91,10 @@ public class TimelineActivity extends AppCompatActivity {
         client.getHomeTimeline(new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
-                // Log.d("TwitterClient", response.toString());
-                // iterate through JSON array
+                // clear out old items before appending in new ones
+                tweetAdapter.clear();
+                // iterate through JSON array response
                 // for each entry, deserialize JSON object
-
                 for(int i = 0; i < response.length(); i++) {
                     try {
                         // convert each object to Tweet model
@@ -90,6 +107,8 @@ public class TimelineActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                 }
+                // on successful reload, signal that refresh has completed
+                swipeContainer.setRefreshing(false);
             }
 
             @Override

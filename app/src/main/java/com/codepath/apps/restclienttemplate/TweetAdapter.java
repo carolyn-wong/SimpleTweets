@@ -60,7 +60,7 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
         // load image using Glide
         Glide.with(context)
                 .load(tweet.user.profileImageUrl)
-                .bitmapTransform(new RoundedCornersTransformation(context, 15, 0))
+                .bitmapTransform(new RoundedCornersTransformation(context, 10, 0))
                 .into(holder.ivProfileImage);
     }
 
@@ -86,5 +86,18 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> 
             tvBody = (TextView) itemView.findViewById(R.id.tvBody);
             tvCreatedAt = (TextView) itemView.findViewById(R.id.tvCreatedAt);
         }
+    }
+
+    // RecyclerView adapter helper methods to clear items from or add items to underlying dataset
+    // clean recycler elements
+    public void clear() {
+        mTweets.clear();
+        notifyDataSetChanged();
+    }
+
+    // add list of tweets - change list type depending on item type used
+    public void addAll(List<Tweet> list) {
+        mTweets.addAll(list);
+        notifyDataSetChanged();
     }
 }
