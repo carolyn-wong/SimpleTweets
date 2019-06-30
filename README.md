@@ -1,4 +1,4 @@
-# Project 3
+# Project 3 - SimpleTweets
 
 SimpleTweets is an Android app that implements basic Twitter functionalities.
 
