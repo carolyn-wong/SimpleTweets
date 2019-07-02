@@ -28,4 +28,22 @@ public class Tweet {
         tweet.user = User.fromJson(jsonObject.getJSONObject("user"));
         return tweet;
     }
+
+    public String getBody() {
+        return body;
+    }
+
+    public long getUid() {
+        return uid;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public String getCreatedAt() {
+        // convert timestamp to relative time
+        String formattedCreatedAt = TimeFormatter.getTimeDifference(createdAt);
+        return formattedCreatedAt;
+    }
 }
