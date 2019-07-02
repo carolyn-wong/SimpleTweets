@@ -79,7 +79,7 @@ public class TimelineActivity extends AppCompatActivity {
         rvTweets.setLayoutManager(linearLayoutManager);
         // set adapter
         rvTweets.setAdapter(tweetAdapter);
-        populateTimeline(1L, "since_id");
+        populateTimeline(0L);
 
         // retain instance so can call "resetStates" for fresh searches
         scrollListener = new EndlessRecyclerViewScrollListener(linearLayoutManager) {
@@ -87,7 +87,7 @@ public class TimelineActivity extends AppCompatActivity {
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
                 Log.i("SCROLL", "SCROLLLLLLLLLL");
                 Long maxTweetId = getMaxId();
-                populateTimeline(maxTweetId, "max_id");
+                populateTimeline(maxTweetId);
             }
         };
         // add scroll listener to RecyclerView
@@ -99,7 +99,7 @@ public class TimelineActivity extends AppCompatActivity {
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                populateTimeline(1L, "since_id");
+                populateTimeline(0L);
             }
         });
         // configure refreshing colors
@@ -110,13 +110,17 @@ public class TimelineActivity extends AppCompatActivity {
     }
 
     // populate Twitter timeline
-    private void populateTimeline(Long maxId, String idType) {
+    private void populateTimeline(final Long maxId) {
         // create anonymous class to handle response from network
-        client.getHomeTimeline(maxId, idType, new JsonHttpResponseHandler() {
+        client.getHomeTimeline(maxId, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
                 // clear out old items before appending in new ones
-                tweetAdapter.clear();
+
+                if(maxId == 0L) {
+                    tweetAdapter.clear();
+                }
+
                 // iterate through JSON array response
                 // for each entry, deserialize JSON object
                 for(int i = 0; i < response.length(); i++) {
@@ -167,7 +171,7 @@ public class TimelineActivity extends AppCompatActivity {
     private long getMaxId() {
         int tweetsSize = tweets.size();
         if(tweetsSize == 0) {
-            return 1L;
+            return 0;
         }
         else {
             Tweet oldest = tweets.get(tweets.size() - 1);
