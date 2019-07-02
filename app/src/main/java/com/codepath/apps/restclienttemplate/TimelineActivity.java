@@ -9,7 +9,10 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ProgressBar;
 
+import com.codepath.apps.restclienttemplate.models.EndlessRecyclerViewScrollListener;
 import com.codepath.apps.restclienttemplate.models.Tweet;
 import com.loopj.android.http.JsonHttpResponseHandler;
 
@@ -44,11 +47,18 @@ public class TimelineActivity extends AppCompatActivity {
         }
     }
 
+    // initialize client, adapter, and views
     TwitterClient client;
     TweetAdapter tweetAdapter;
     ArrayList<Tweet> tweets;
     RecyclerView rvTweets;
     private SwipeRefreshLayout swipeContainer;
+
+    // variable for endless scroll listener
+    private EndlessRecyclerViewScrollListener scrollListener;
+
+    // initialize progress bar footer
+    ProgressBar progressBarFooter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,10 +75,23 @@ public class TimelineActivity extends AppCompatActivity {
         // construct adapter from data source
         tweetAdapter = new TweetAdapter(tweets);
         // RecyclerView setup (layout manager, use adapter)
-        rvTweets.setLayoutManager(new LinearLayoutManager(this));
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        rvTweets.setLayoutManager(linearLayoutManager);
         // set adapter
         rvTweets.setAdapter(tweetAdapter);
-        populateTimeline();
+        populateTimeline(1L, "since_id");
+
+        // retain instance so can call "resetStates" for fresh searches
+        scrollListener = new EndlessRecyclerViewScrollListener(linearLayoutManager) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
+                Log.i("SCROLL", "SCROLLLLLLLLLL");
+                Long maxTweetId = getMaxId();
+                populateTimeline(maxTweetId, "max_id");
+            }
+        };
+        // add scroll listener to RecyclerView
+        rvTweets.addOnScrollListener(scrollListener);
 
         // look up swipe container view
         swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
@@ -76,7 +99,7 @@ public class TimelineActivity extends AppCompatActivity {
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                populateTimeline();
+                populateTimeline(1L, "since_id");
             }
         });
         // configure refreshing colors
@@ -86,9 +109,10 @@ public class TimelineActivity extends AppCompatActivity {
                 getResources().getColor(android.R.color.holo_red_light));
     }
 
-    private void populateTimeline() {
+    // populate Twitter timeline
+    private void populateTimeline(Long maxId, String idType) {
         // create anonymous class to handle response from network
-        client.getHomeTimeline(new JsonHttpResponseHandler() {
+        client.getHomeTimeline(maxId, idType, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
                 // clear out old items before appending in new ones
@@ -119,6 +143,7 @@ public class TimelineActivity extends AppCompatActivity {
         });
     }
 
+    // Compose Activity
     // create request code for compose activity
     private final int COMPOSE_CODE = 1;
     // call compose activity using intents
@@ -136,5 +161,26 @@ public class TimelineActivity extends AppCompatActivity {
             tweetAdapter.notifyItemInserted(0);
             rvTweets.scrollToPosition(0);
         }
+    }
+
+    // get id of the oldest tweet
+    private long getMaxId() {
+        int tweetsSize = tweets.size();
+        if(tweetsSize == 0) {
+            return 1L;
+        }
+        else {
+            Tweet oldest = tweets.get(tweets.size() - 1);
+            return oldest.getUid();
+        }
+    }
+
+    // Set up footer progress bar
+    public void setupProgressFooter() {
+        // find RecyclerView
+        rvTweets = (RecyclerView) findViewById(R.id.rvTweet);
+        // inflate footer
+        View footer = getLayoutInflater().inflate(R.layout.footer_progress, null);
+        progressBarFooter = (ProgressBar) footer.findViewById(R.id.pbFooter);
     }
 }
