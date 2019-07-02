@@ -86,6 +86,7 @@ public class TimelineActivity extends AppCompatActivity {
             @Override
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
                 Log.i("SCROLL", "SCROLLLLLLLLLL");
+                Log.i("Scroll again", "scroll again");
                 Long maxTweetId = getMaxId();
                 populateTimeline(maxTweetId);
             }
