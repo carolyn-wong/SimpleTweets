@@ -18,7 +18,7 @@ import java.util.List;
 
 import jp.wasabeef.glide.transformations.RoundedCornersTransformation;
 
-public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder> {
+public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.ViewHolder>{
 
     List<Tweet> mTweets;
     // context defined as global variable so Glide in onBindViewHolder has access
